@@ -1,0 +1,127 @@
+---
+title: "FOR SOME REASON, THIS TOPS OUT AT 6 INTERACTIVE TABS RENDERING BACKWARDS"
+output: flexdashboard::flex_dashboard
+---
+    
+```{r, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(flowmapblue)
+library(htmltools)
+library(knitr)
+
+# rMarkdown parameters 
+options(scipen = 999, digits = 3)
+
+opts_chunk$set(
+  cache = FALSE,
+  warning = FALSE,
+  echo = FALSE,
+  message = FALSE,
+  include = TRUE
+)
+
+# API Key 
+source("../../API_KEYS/R/mapbox_key.R")
+
+# Global Variables
+clustered <- FALSE
+floor <- 5
+
+# Read Data
+bilateral_international_migration <-
+  read_csv("../clean/bilateral_international_migration.csv") %>%
+  mutate(time = ymd_hms(time),
+         time = as.integer(time) * 1000)
+
+world_centroids <-
+  read_csv("../clean/world_centroids.csv") %>% 
+  select(id, lat, lon)
+
+unique(bilateral_international_migration$category)
+
+fn_map <- function(categories) {
+
+  #categories <- "outward (minimisation:open)"
+  
+  df1 <- bilateral_international_migration %>%
+    filter(category == categories) %>%
+    filter(count > floor) %>%
+    select(origin, dest, time, count)  
+  
+  flowmapblue(
+    world_centroids,
+    df1,
+    mapbox_key,
+    clustering = clustered,
+    darkMode = TRUE,
+    animation = FALSE
+  )
+}
+```
+    
+Column {.tabset}
+-------------------------------------
+
+### outward (minimisation:open)
+
+```{r}
+#FOR SOME REASON, THIS TOPS OUT AT 6 INTERACTIVE TABS RENDERING BACKWARDS
+fn_map("outward (minimisation:open)")
+```   
+ 
+### transit (minimisation:open)
+
+```{r}
+fn_map("transit (minimisation:open)")
+```   
+
+### return (minimisation:open)
+
+```{r}
+fn_map("return (minimisation:open)")
+```   
+
+### outward (minimisation:closed)
+
+```{r}
+fn_map("outward (minimisation:closed)")
+```   
+
+### transit (minimisation:closed)
+
+```{r}
+fn_map("transit (minimisation:closed)")
+```   
+
+### return (minimisation:closed)
+
+```{r}
+fn_map("return (minimisation:closed)")
+```   
+
+### outward (pseudo-Bayesian:closed)
+
+```{r}
+fn_map("outward (pseudo-Bayesian:closed)")
+```   
+
+### outward (minimisation:open)
+
+```{r}
+fn_map("transit (pseudo-Bayesian:closed)")
+```   
+
+### outward (minimisation:open)
+
+```{r}
+fn_map("return (pseudo-Bayesian:closed)")
+```   
+
+### source & instructions
+
+This data is courtesy of: 
+
+[Abel, G.J., Cohen, J.E. Bilateral international migration flow estimates for 200 countries. *Sci Data* 6, 82 (2019)](https://www.nature.com/articles/s41597-019-0089-3). [https://doi.org/10.1038/s41597-019-0089-3](https://doi.org/10.1038/s41597-019-0089-3) [data](https://figshare.com/collections/Bilateral_international_migration_flow_estimates_for_200_countries/4470464)
+
+If you wish to look at one period at the time, shrink the width to include just one bar on the time line. Shrinking this to just within two bars will produce a smoother transition between the years.
